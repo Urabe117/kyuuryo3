@@ -99,7 +99,6 @@ function renderAll() {
   renderJobOptions();
   renderPaydayCalendar();
   renderPresetOptions();
-  renderQuickPresets();
   document.getElementById("monthlyGoal").value = data.monthlyGoal || "";
 }
 
@@ -293,28 +292,43 @@ function renderPresetOptions() {
 
   const shiftList = document.getElementById("shiftPresetList");
   shiftList.innerHTML = "";
-  data.presets.forEach(preset => shiftList.appendChild(createPresetButton(preset, "modal")));
+  data.presets.forEach(preset => shiftList.appendChild(createPresetButton(preset)));
   if (!data.presets.length) shiftList.innerHTML = `<span class="field-note">プリセットを登録するとここに表示されます</span>`;
 }
 
-function createPresetButton(preset, openModal = true) {
+function createPresetButton(preset) {
   const job = getJob(preset.jobId);
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "preset-button";
   btn.innerHTML = `<span><span class="color-dot" style="background:${job?.color || '#64748b'}"></span>${preset.name}</span><small>${preset.startTime}–${preset.endTime}</small>`;
-  btn.addEventListener("click", () => {
-    if (openModal) openShiftModal(null, dateKey(new Date()));
-    applyPresetToShiftForm(preset);
-  });
-  return btn;
-}
 
-function renderQuickPresets() {
-  const list = document.getElementById("quickPresetList");
-  list.innerHTML = "";
-  data.presets.forEach(preset => list.appendChild(createPresetButton(preset, "today")));
-  if (!data.presets.length) list.innerHTML = `<div class="empty">プリセットを登録すると、ここからすぐ勤務入力できます</div>`;
+  btn.addEventListener("click", () => {
+    const selectedDate = document.getElementById("shiftDate").value;
+    if (!selectedDate) {
+      alert("先に日付を選んでください。");
+      return;
+    }
+
+    const shift = {
+      id: crypto.randomUUID(),
+      date: selectedDate,
+      jobId: preset.jobId,
+      startTime: preset.startTime,
+      endTime: preset.endTime,
+      breakMinutes: Number(preset.breakMinutes || 0),
+      bonus: 0,
+      deduction: 0,
+      memo: ""
+    };
+
+    data.shifts.push(shift);
+    saveData();
+    renderAll();
+    document.getElementById("shiftModal").close();
+  });
+
+  return btn;
 }
 
 function applyPresetToShiftForm(preset) {
@@ -414,6 +428,9 @@ function openShiftModal(shift = null, selectedDate = null) {
   document.getElementById("deduction").value = 0;
   document.getElementById("shiftDate").value = selectedDate || dateKey(new Date());
   document.getElementById("deleteShiftBtn").classList.add("hidden");
+
+  const presetArea = document.getElementById("shiftPresetList").parentElement;
+  presetArea.classList.toggle("hidden", Boolean(shift));
 
   if (shift) {
     document.getElementById("shiftId").value = shift.id;

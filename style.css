@@ -114,8 +114,6 @@ input, select, textarea {
 
 .goal-progress p { margin: 8px 0 0; color: var(--muted); }
 
-.quick-card { margin-top: 16px; padding: 18px; }
-.quick-card p { margin: 5px 0 0; color: var(--muted); }
 .calendar-card { margin-top: 16px; padding: 18px; }
 
 .calendar-header {
